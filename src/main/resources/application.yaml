@@ -3,9 +3,9 @@ ktor:
     port: 8080
   application:
     modules:
-      - com.omie.RoutingKt.configureRouting
-      - com.omie.BrokerModuleKt.configureMessaging
-      - com.omie.InvoiceListenerModuleKt.configureInvoiceListener
+      - com.omie.modules.RoutingKt.configureRouting
+      - com.omie.modules.BrokerModuleKt.configureMessaging
+      - com.omie.modules.InvoiceListenerModuleKt.configureInvoiceListener
 
 rabbitmq:
   connection:

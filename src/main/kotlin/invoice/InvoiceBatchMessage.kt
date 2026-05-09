@@ -1,7 +1,6 @@
 package com.omie.invoice
 
 import kotlinx.serialization.Serializable
-
 @Serializable
 data class InvoiceBatchMessage(
     val numeroLote: Int,
