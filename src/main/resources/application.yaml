@@ -1,0 +1,22 @@
+ktor:
+  deployment:
+    port: 8080
+  application:
+    modules:
+      - com.omie.RoutingKt.configureRouting
+      - com.omie.BrokerModuleKt.configureMessaging
+      - com.omie.InvoiceListenerModuleKt.configureInvoiceListener
+
+rabbitmq:
+  connection:
+    host: "$RABBITMQ_HOST:localhost"
+    port: "$RABBITMQ_PORT:5672"
+    username: "$RABBITMQ_USER:guest"
+    password: "$RABBITMQ_PASSWORD:guest"
+    virtualHost: "$RABBITMQ_VHOST:/"
+  queues:
+    input: "$RABBITMQ_QUEUE_INPUT:bowe-dev-lote-conta-receber-omie"
+    success: "$RABBITMQ_QUEUE_SUCCESS:bowe-dev-gerar-fatura"
+    error: "$RABBITMQ_QUEUE_ERROR:bowe-dev-error-fatura"
+  consumer:
+    prefetch: "$RABBITMQ_PREFETCH:10"
