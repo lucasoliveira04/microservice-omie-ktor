@@ -1,4 +1,4 @@
-package com.omie.exceptions
+package com.omie.broker
 
 class BrokerException(
     message: String,

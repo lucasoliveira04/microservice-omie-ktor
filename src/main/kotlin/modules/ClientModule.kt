@@ -1,42 +1,27 @@
 package com.omie.modules
 
-import com.omie.client.OmieClient
-import com.omie.client.OmieClientImpl
-import io.ktor.client.*
+import com.omie.omie.OmieClient
+import com.omie.omie.OmieClientImpl
+import com.omie.omie.HttpClientFactory
+import com.omie.omie.omieConfig
 import io.ktor.server.application.*
-import io.ktor.util.*
+import io.ktor.util.AttributeKey
 import org.slf4j.LoggerFactory
 
+val OmieClientKey: AttributeKey<OmieClient> = AttributeKey("OmieClient")
+
+val Application.omieClient: OmieClient
+    get() = attributes[OmieClientKey]
 fun Application.configureClients() {
 
     val logger = LoggerFactory.getLogger("ClientModule")
 
-    logger.info("Iniciando configuração dos clients HTTP")
+    val omieConfig = omieConfig()
+    val httpClient = HttpClientFactory.create()
+    val omieClient: OmieClient = OmieClientImpl(httpClient, omieConfig)
 
-    val omieUrl = environment.config
-        .property("api.uri")
-        .getString()
-
-    logger.info("URL da API configurada: {}", omieUrl)
-
-    val httpClient = HttpClient()
-
-    logger.info("HttpClient criado")
-
-    val omieClient: OmieClient =
-        OmieClientImpl(
-            httpClient = httpClient,
-            omieUrl = omieUrl
-        )
-
-    logger.info("OmieClientImpl inicializado")
-
-    attributes.put(
-        AttributeKey("omieClient"),
-        omieClient
-    )
-
-    logger.info("OmieClient registrado em Application.attributes")
+    attributes.put(OmieClientKey, omieClient)
+    logger.info("OmieClient configurado (url=${omieConfig.url})")
 
     monitor.subscribe(ApplicationStopped) {
         logger.info("Encerrando HttpClient")

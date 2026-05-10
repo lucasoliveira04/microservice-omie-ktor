@@ -1,6 +1,8 @@
 package com.omie.modules
 
 import com.omie.broker.amqp.rabbitConfig
+import com.omie.processing.BatchProcessor
+import com.omie.processing.OmieRequestMapper
 import com.omie.invoice.InvoiceBatchListener
 import io.ktor.server.application.Application
 import io.ktor.server.application.ApplicationStarted
@@ -21,7 +23,9 @@ fun Application.configureInvoiceListener() {
     val broker = messageBroker
     val inputQueue = rabbitConfig().queues.input
 
-    val listener = InvoiceBatchListener(broker, inputQueue)
+    val mapper = OmieRequestMapper()
+    val processor = BatchProcessor(mapper, omieClient)
+    val listener = InvoiceBatchListener(broker, inputQueue, processor)
 
     monitor.subscribe(ApplicationStarted) {
         listenerScope.launch {

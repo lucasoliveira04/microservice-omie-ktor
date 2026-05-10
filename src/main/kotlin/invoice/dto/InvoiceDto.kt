@@ -1,18 +1,9 @@
-package com.omie.invoice
+package com.omie.invoice.dto
 
 import kotlinx.serialization.Serializable
-@Serializable
-data class InvoiceBatchMessage(
-    val numeroLote: Int,
-    val loteId: String,
-    val correlationId: String,
-    val dataCriacao: String,
-    val origem: String,
-    val faturas: List<FaturaMessage>
-)
 
 @Serializable
-data class FaturaMessage(
+data class InvoiceDto(
     val id: String,
     val codigoLancamentoIntegracao: String,
     val codigoCliente: Long,

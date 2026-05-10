@@ -5,14 +5,14 @@ ktor:
     modules:
       - com.omie.modules.RoutingKt.configureRouting
       - com.omie.modules.BrokerModuleKt.configureMessaging
-      - com.omie.modules.InvoiceListenerModuleKt.configureInvoiceListener
       - com.omie.modules.ClientModuleKt.configureClients
-
-api:
-    base-path: "/api/v1"
-    uri: "http://localhost:8080/api/v1"
+      - com.omie.modules.InvoiceListenerModuleKt.configureInvoiceListener
 
 
+omie:
+  url: "https://app.omie.com.br/api/v1/financas/contareceber/"
+  appKey: "$OMIE_APP_KEY"
+  appSecret: "$OMIE_APP_SECRET"
 
 rabbitmq:
   connection:

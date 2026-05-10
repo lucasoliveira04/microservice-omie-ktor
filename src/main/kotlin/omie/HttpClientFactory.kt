@@ -1,4 +1,4 @@
-package com.omie.client.config
+package com.omie.omie
 
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.cio.CIO
@@ -23,7 +23,7 @@ object HttpClientFactory {
             }
 
             install(Logging) {
-                level = LogLevel.INFO
+                level = LogLevel.ALL
             }
 
             engine {
