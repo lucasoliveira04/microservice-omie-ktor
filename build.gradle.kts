@@ -31,9 +31,11 @@ dependencies {
     implementation(ktorLibs.client.contentNegotiation)
     implementation(ktorLibs.client.logging)
 
-    // RabbitMQ + Logback
+    // RabbitMQ + Logback + Redis
     implementation(libs.rabbitmq.client)
     implementation(libs.logback.classic)
+    implementation(libs.lettuce.core)
+    implementation(libs.kotlinx.coroutines.reactive)
 
     // Testes
     testImplementation(kotlin("test"))

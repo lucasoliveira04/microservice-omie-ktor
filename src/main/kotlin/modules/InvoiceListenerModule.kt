@@ -4,6 +4,7 @@ import com.omie.broker.amqp.rabbitConfig
 import com.omie.processing.BatchProcessor
 import com.omie.processing.OmieRequestMapper
 import com.omie.invoice.InvoiceBatchListener
+import com.omie.processing.IdempotencyFilter
 import io.ktor.server.application.Application
 import io.ktor.server.application.ApplicationStarted
 import io.ktor.server.application.ApplicationStopped
@@ -24,7 +25,13 @@ fun Application.configureInvoiceListener() {
     val inputQueue = rabbitConfig().queues.input
 
     val mapper = OmieRequestMapper()
-    val processor = BatchProcessor(mapper, omieClient)
+    val filter = IdempotencyFilter(idempotencyStore)
+    val processor = BatchProcessor(
+        mapper = mapper,
+        omieClient = omieClient,
+        idempotencyFilter = filter,
+        idempotencyStore = idempotencyStore
+    )
     val listener = InvoiceBatchListener(broker, inputQueue, processor)
 
     monitor.subscribe(ApplicationStarted) {

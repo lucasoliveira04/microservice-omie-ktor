@@ -6,6 +6,7 @@ ktor:
       - com.omie.modules.RoutingKt.configureRouting
       - com.omie.modules.BrokerModuleKt.configureMessaging
       - com.omie.modules.ClientModuleKt.configureClients
+      - com.omie.modules.IdempotencyModuleKt.configureIdempotency
       - com.omie.modules.InvoiceListenerModuleKt.configureInvoiceListener
 
 
@@ -27,3 +28,9 @@ rabbitmq:
     error: "$RABBITMQ_QUEUE_ERROR:bowe-dev-error-fatura"
   consumer:
     prefetch: "$RABBITMQ_PREFETCH:10"
+
+redis:
+  host: "$REDIS_HOST:localhost"
+  port: "$REDIS_PORT:6379"
+  database: "$REDIS_DATABASE:0"
+  ttlDays: "$REDIS_TTL_DAYS:30"
