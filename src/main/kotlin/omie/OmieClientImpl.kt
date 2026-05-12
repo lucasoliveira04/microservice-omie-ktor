@@ -3,6 +3,8 @@ package com.omie.omie
 import com.omie.omie.dto.request.IncluirContaReceberLoteParam
 import com.omie.omie.dto.request.OmieRequest
 import com.omie.omie.dto.response.IncluirContaReceberLoteResponse
+import com.omie.omie.dto.response.OmieErrorResponse
+import com.omie.omie.error.OmieException
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.request.*
@@ -21,9 +23,15 @@ class OmieClientImpl(
             param = listOf(param)
         )
 
-        return httpClient.post(omieConfig.url) {
+        val response = httpClient.post(omieConfig.url) {
             contentType(ContentType.Application.Json)
             setBody(request)
-        }.body()
+        }
+
+        if (!response.status.isSuccess()) {
+            throw OmieException(response.body<OmieErrorResponse>())
+        }
+
+        return response.body()
     }
 }

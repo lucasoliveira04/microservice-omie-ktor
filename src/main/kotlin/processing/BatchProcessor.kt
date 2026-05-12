@@ -1,9 +1,15 @@
 package com.omie.processing
 
+import com.omie.broker.MessageBroker
 import com.omie.idempotency.IdempotencyStore
 import com.omie.idempotency.dto.IdempotencyPayload
 import com.omie.omie.OmieClient
 import com.omie.invoice.dto.BatchDto
+import com.omie.invoice.dto.event.FaturaErroEvent
+import com.omie.invoice.mapper.FaturaEventMapper
+import com.omie.omie.error.OmieErroTipo
+import com.omie.omie.error.OmieException
+import com.omie.omie.error.OmieExceptionHandler
 import kotlinx.serialization.json.Json
 import org.slf4j.LoggerFactory
 import java.time.Instant
@@ -12,7 +18,9 @@ class BatchProcessor(
     private val mapper: OmieRequestMapper,
     private val omieClient: OmieClient,
     private val idempotencyFilter: IdempotencyFilter,
-    private val idempotencyStore: IdempotencyStore
+    private val idempotencyStore: IdempotencyStore,
+    private val broker: MessageBroker,
+    private val errorQueue: String
 ) {
     private val logger = LoggerFactory.getLogger(BatchProcessor::class.java)
     private val json = Json { ignoreUnknownKeys = true }
@@ -34,19 +42,28 @@ class BatchProcessor(
             return
         }
 
+        val invoicePorCodigo = filterResult.novas.associateBy { it.codigoLancamentoIntegracao }
 
         val batchSomenteNovas = batch.copy(faturas = filterResult.novas)
         val param = mapper.toIncluirContaReceberLoteParam(batchSomenteNovas)
 
         val response = try {
             omieClient.incluirContaReceberLote(param)
-        } catch (e: Exception) {
-            logger.error(
-                "Falha na chamada OMIE: loteId={}, motivo={}",
-                batch.loteId, e.message, e
-            )
+        } catch (e: OmieException) {
             idempotencyStore.liberarLocks(filterResult.novas)
-            throw e
+            if (OmieExceptionHandler.shouldSendToDlq(e.tipo)) throw e
+
+            filterResult.novas.forEach { invoice ->
+                val event = FaturaEventMapper.toErroEventFromException(
+                    exception = e,
+                    invoice = invoice,
+                    correlationId = batch.correlationId,
+                    loteId = batch.loteId
+                )
+                broker.publish(errorQueue, json.encodeToString(FaturaErroEvent.serializer(), event))
+                logger.warn("  ✗ {} → tipo={}, motivo={}", invoice.codigoLancamentoIntegracao, e.tipo, e.message)
+            }
+            return
         }
 
         // Análise do lote inteiro
@@ -85,6 +102,26 @@ class BatchProcessor(
 
         erros.forEach { item ->
             idempotencyStore.releaseLock(item.codigoLancamentoIntegracao)
+
+            val invoice = invoicePorCodigo[item.codigoLancamentoIntegracao]
+
+            if (invoice == null) {
+                logger.warn("Invoice não encontrada para correlacionar erro: {}", item.codigoLancamentoIntegracao)
+                return@forEach
+            }
+
+            val event = FaturaEventMapper.toErroEvent(
+                item = item,
+                invoice = invoice,
+                correlationId = batch.correlationId,
+                loteId = batch.loteId
+            )
+
+            broker.publish(
+                errorQueue,
+                json.encodeToString(FaturaErroEvent.serializer(),
+                    event))
+
             logger.warn(
                 "  ✗ {} → status={}, descricao={}",
                 item.codigoLancamentoIntegracao, item.codigoStatus, item.descricaoStatus

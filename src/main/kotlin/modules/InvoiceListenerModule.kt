@@ -1,5 +1,6 @@
 package com.omie.modules
 
+import com.omie.broker.amqp.RabbitMqBroker
 import com.omie.broker.amqp.rabbitConfig
 import com.omie.processing.BatchProcessor
 import com.omie.processing.OmieRequestMapper
@@ -30,7 +31,9 @@ fun Application.configureInvoiceListener() {
         mapper = mapper,
         omieClient = omieClient,
         idempotencyFilter = filter,
-        idempotencyStore = idempotencyStore
+        idempotencyStore = idempotencyStore,
+        broker = broker,
+        errorQueue = rabbitConfig().queues.error
     )
     val listener = InvoiceBatchListener(broker, inputQueue, processor)
 
