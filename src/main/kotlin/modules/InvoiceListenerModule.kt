@@ -1,20 +1,12 @@
 package com.omie.modules
 
-import com.omie.broker.amqp.RabbitMqBroker
 import com.omie.broker.amqp.rabbitConfig
-import com.omie.processing.BatchProcessor
-import com.omie.processing.OmieRequestMapper
 import com.omie.invoice.InvoiceBatchListener
+import com.omie.processing.BatchProcessor
 import com.omie.processing.IdempotencyFilter
-import io.ktor.server.application.Application
-import io.ktor.server.application.ApplicationStarted
-import io.ktor.server.application.ApplicationStopped
-import kotlinx.coroutines.CoroutineName
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
-import kotlinx.coroutines.launch
+import com.omie.processing.OmieRequestMapper
+import io.ktor.server.application.*
+import kotlinx.coroutines.*
 import org.slf4j.LoggerFactory
 
 fun Application.configureInvoiceListener() {
@@ -33,7 +25,8 @@ fun Application.configureInvoiceListener() {
         idempotencyFilter = filter,
         idempotencyStore = idempotencyStore,
         broker = broker,
-        errorQueue = rabbitConfig().queues.error
+        errorQueue = rabbitConfig().queues.error,
+        successQueue = rabbitConfig().queues.success
     )
     val listener = InvoiceBatchListener(broker, inputQueue, processor)
 

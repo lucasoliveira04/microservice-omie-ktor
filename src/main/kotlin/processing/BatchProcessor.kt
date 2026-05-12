@@ -6,6 +6,7 @@ import com.omie.idempotency.dto.IdempotencyPayload
 import com.omie.omie.OmieClient
 import com.omie.invoice.dto.BatchDto
 import com.omie.invoice.dto.event.FaturaErroEvent
+import com.omie.invoice.dto.event.FaturaGeradaEvent
 import com.omie.invoice.mapper.FaturaEventMapper
 import com.omie.omie.error.OmieErroTipo
 import com.omie.omie.error.OmieException
@@ -20,7 +21,8 @@ class BatchProcessor(
     private val idempotencyFilter: IdempotencyFilter,
     private val idempotencyStore: IdempotencyStore,
     private val broker: MessageBroker,
-    private val errorQueue: String
+    private val errorQueue: String,
+    private val successQueue: String,
 ) {
     private val logger = LoggerFactory.getLogger(BatchProcessor::class.java)
     private val json = Json { ignoreUnknownKeys = true }
@@ -94,6 +96,23 @@ class BatchProcessor(
                 key = item.codigoLancamentoIntegracao,
                 value = json.encodeToString(IdempotencyPayload.serializer(), payload)
             )
+
+            val invoice = invoicePorCodigo[item.codigoLancamentoIntegracao]
+
+            if (invoice == null) {
+                logger.warn("Invoice não encontrada para correlacionar sucesso: {}", item.codigoLancamentoIntegracao)
+                return@forEach
+            }
+
+            val event = FaturaEventMapper.toGeradaEvent(
+                item = item,
+                invoice = invoice,
+                correlationId = batch.correlationId,
+                loteId = batch.loteId
+            )
+
+            broker.publish(successQueue, json.encodeToString(FaturaGeradaEvent.serializer(), event))
+
             logger.info(
                 "  ✓ {} → codigoOmie={}",
                 item.codigoLancamentoIntegracao, item.codigoLancamentoOmie
