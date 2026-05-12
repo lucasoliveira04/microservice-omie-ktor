@@ -4,6 +4,7 @@ enum class OmieErroTipo(val codes: Set<Int>) {
     JA_CADASTRADO(setOf(102)),
     CLIENTE_NAO_ENCONTRADO(setOf(1035)),
     CONTA_CORRENTE_NAO_ENCONTRADA(setOf(1140)),
+    LOTE_EXCEDE_LIMITE(setOf(1003)),
     CONSUMO_REDUNDANTE(setOf(6)),
     CREDENCIAL_INVALIDA(emptySet()),
     DESCONHECIDO(emptySet());

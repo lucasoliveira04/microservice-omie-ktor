@@ -4,6 +4,6 @@ import com.omie.omie.dto.response.OmieErrorResponse
 
 class OmieException(
     val errorResponse: OmieErrorResponse,
-    val tipo: OmieErroTipo = OmieErroTipo.fromFaultcode(errorResponse.faultstring)
+    val tipo: OmieErroTipo = OmieErroTipo.fromFaultcode(errorResponse.faultcode)
 ) : RuntimeException(errorResponse.faultstring) {
 }
