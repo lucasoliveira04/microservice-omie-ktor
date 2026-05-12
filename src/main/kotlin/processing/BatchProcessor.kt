@@ -3,29 +3,38 @@ package com.omie.processing
 import com.omie.broker.MessageBroker
 import com.omie.idempotency.IdempotencyStore
 import com.omie.idempotency.dto.IdempotencyPayload
-import com.omie.omie.OmieClient
 import com.omie.invoice.dto.BatchDto
 import com.omie.invoice.dto.event.FaturaErroEvent
 import com.omie.invoice.dto.event.FaturaGeradaEvent
 import com.omie.invoice.mapper.FaturaEventMapper
-import com.omie.omie.error.OmieErroTipo
+import com.omie.omie.OmieClient
 import com.omie.omie.error.OmieException
 import com.omie.omie.error.OmieExceptionHandler
 import kotlinx.serialization.json.Json
 import org.slf4j.LoggerFactory
 import java.time.Instant
 
+data class BatchProcessorParams(
+    val mapper: OmieRequestMapper,
+    val omieClient: OmieClient,
+    val idempotencyFilter: IdempotencyFilter,
+    val idempotencyStore: IdempotencyStore,
+    val broker: MessageBroker,
+    val successQueue: String,
+    val errorQueue: String
+)
 class BatchProcessor(
-    private val mapper: OmieRequestMapper,
-    private val omieClient: OmieClient,
-    private val idempotencyFilter: IdempotencyFilter,
-    private val idempotencyStore: IdempotencyStore,
-    private val broker: MessageBroker,
-    private val errorQueue: String,
-    private val successQueue: String,
+    private val params: BatchProcessorParams,
 ) {
     private val logger = LoggerFactory.getLogger(BatchProcessor::class.java)
     private val json = Json { ignoreUnknownKeys = true }
+    private val mapper = params.mapper
+    private val omieClient = params.omieClient
+    private val idempotencyFilter = params.idempotencyFilter
+    private val idempotencyStore = params.idempotencyStore
+    private val broker = params.broker
+    private val successQueue = params.successQueue
+    private val errorQueue = params.errorQueue
     suspend fun process(batch: BatchDto) {
         logger.info(
             "Processando lote: loteId={}, correlationId={}, faturas={}",
