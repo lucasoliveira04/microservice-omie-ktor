@@ -2,6 +2,7 @@ services:
   rabbitmq:
     image: rabbitmq:3.13-management
     container_name: rabbitmq-omie
+    restart: unless-stopped
     ports:
       - "5672:5672"
       - "15672:15672"
@@ -12,6 +13,7 @@ services:
   redis:
     image: redis:7-alpine
     container_name: redis-omie
+    restart: unless-stopped
     ports:
       - "6379:6379"
     volumes:
