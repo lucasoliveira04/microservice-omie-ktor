@@ -87,8 +87,7 @@ class BatchProcessor(
             return
         }
 
-        val sucessos = response.statusLote.filter { it.codigoStatus == "0" }
-        val erros = response.statusLote.filter { it.codigoStatus != "0" }
+        val (sucessos, erros) = response.statusLote.partition { it.codigoStatus == "0" }
 
         logger.info(
             "Lote processado: loteId={}, sucessos={}, erros={}",
